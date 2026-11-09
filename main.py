@@ -2,9 +2,11 @@ from pathlib import Path
 
 import torch
 from PIL import Image
+from torchvision.datasets import ImageFolder
 from torchvision.models import ResNet18_Weights, resnet18
 
 VAL_DIR = Path("data/imagenette2-320/val")
+IMAGENETTE_INDICES = [0, 217, 482, 491, 497, 566, 571, 574, 701]
 
 def main():
     print(torch.__version__)
@@ -31,6 +33,12 @@ def main():
     for prob, index in zip(top.values[0], top.indices[0]):
         name = categories[index.item()]
         print(name, prob.item())
+
+    dataset = ImageFolder(VAL_DIR, transform=preprocess)
+    print("images", len(dataset))
+    for wind, index in zip(dataset.classes, IMAGENETTE_INDICES):
+        print(wind, index, categories[index])
+
 
 if __name__ == "__main__":
     main()
