@@ -2,11 +2,12 @@ from pathlib import Path
 
 import torch
 from PIL import Image
+from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
 from torchvision.models import ResNet18_Weights, resnet18
 
 VAL_DIR = Path("data/imagenette2-320/val")
-IMAGENETTE_INDICES = [0, 217, 482, 491, 497, 566, 571, 574, 701]
+IMAGENETTE_INDICES = [0, 217, 482, 491, 497, 566, 569, 571, 574, 701]
 
 def main():
     print(torch.__version__)
@@ -36,9 +37,23 @@ def main():
 
     dataset = ImageFolder(VAL_DIR, transform=preprocess)
     print("images", len(dataset))
-    for wind, index in zip(dataset.classes, IMAGENETTE_INDICES):
-        print(wind, index, categories[index])
-
+    to_imagenet = torch.tensor(IMAGENETTE_INDICES, device=device)
+    loader = DataLoader(dataset, batch_size=64, num_workers=4)
+    correct_1000 = 0
+    correct_10 = 0
+    with torch.no_grad():
+        for images, labels in loader:
+            images = images.to(device)
+            labels = labels.to(device)
+            logits = model(images)
+            # Predict as on full ImageNet
+            preds_1000 = logits.argmax(dim=1)
+            correct_1000 += (preds_1000 == to_imagenet[labels]).sum().item()
+            # Only Imagenette classes
+            preds_10 = logits[:, to_imagenet].argmax(dim=1)
+            correct_10 += (preds_10 == labels).sum().item()
+    print("top for 1000 classes", correct_1000 / len(dataset))
+    print("top for 10 classes", correct_10 / len(dataset))
 
 if __name__ == "__main__":
     main()
