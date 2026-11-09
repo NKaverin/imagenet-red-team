@@ -19,7 +19,6 @@ def main():
     model = resnet18(weights=weights).to(device).eval()
     preprocess = weights.transforms()
     categories = weights.meta["categories"]
-    print(preprocess)
 
     # One image
     image_path = sorted((VAL_DIR / "n01440764").iterdir())[0]
@@ -35,6 +34,7 @@ def main():
         name = categories[index.item()]
         print(name, prob.item())
 
+    # Dataset
     dataset = ImageFolder(VAL_DIR, transform=preprocess)
     print("images", len(dataset))
     to_imagenet = torch.tensor(IMAGENETTE_INDICES, device=device)
